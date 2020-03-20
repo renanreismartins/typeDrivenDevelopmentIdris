@@ -16,3 +16,11 @@ listToTree : Ord a => List a -> BSTree a
 listToTree [] = Empty
 listToTree (x :: xs) = let inserted = listToTree xs in
                            insert x inserted
+
+
+
+treeToList : BSTree a -> List a
+treeToList Empty = []
+treeToList (Node left val right) = let insertedLeft = treeToList left
+                                       insertedRight = treeToList right in
+                                       insertedLeft ++ (val :: insertedRight)
