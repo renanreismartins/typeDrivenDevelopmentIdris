@@ -6,6 +6,13 @@ insert : elem -> BSTree elem -> BSTree elem
 insert x Empty = Node Empty x Empty
 insert x orig@(Node left val right)
       = case compare x val of
-             LT => Node (insert x left) x right
+             LT => Node (insert x left) val right
              EQ => orig
              GT => Node left val (insert x right)
+
+
+
+listToTree : Ord a => List a -> BSTree a
+listToTree [] = Empty
+listToTree (x :: xs) = let inserted = listToTree xs in
+                           insert x inserted
