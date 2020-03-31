@@ -1,3 +1,5 @@
+import data.Vect
+
 data PowerSource = Petrol | Pedal | Electricity
 
 data Vehicle : PowerSource -> Type where
@@ -21,3 +23,11 @@ refuel (Car fuel) = Car 100
 refuel (Bus fuel) = Bus 200
 refuel (Motorcycle fuel) = Motorcycle 50
 refuel (Tram fuel) = Tram 600
+
+
+vectTake : (n : Nat) -> Vect (n + m) a -> Vect n a
+vectTake Z xs = []
+vectTake (S k) (x :: xs) = x :: vectTake k xs
+--vectTake (S k) (x :: xs) = x :: vectTake (pred k) xs
+--vectTake (S k) (x :: xs) = let r = vectTake (pred k) xs in
+--                               x :: r
