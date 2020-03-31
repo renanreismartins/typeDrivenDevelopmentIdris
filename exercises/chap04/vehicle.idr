@@ -31,3 +31,9 @@ vectTake (S k) (x :: xs) = x :: vectTake k xs
 --vectTake (S k) (x :: xs) = x :: vectTake (pred k) xs
 --vectTake (S k) (x :: xs) = let r = vectTake (pred k) xs in
 --                               x :: r
+
+
+sumEntries : Num a => (pos : Integer) -> Vect n a -> Vect n a -> Maybe a
+sumEntries {n} pos xs ys = case integerToFin pos n of
+                                Nothing => Nothing
+                                Just idx => Just ((Vect.index idx xs) + (Vect.index idx ys) )
