@@ -1,4 +1,4 @@
-module main
+module Main
 
 import Data.Vect
 
@@ -24,6 +24,7 @@ addToStore (MkData size items) newItem = MkData _ (addToData items)
 data Command = Add String
              | Get Integer
              | Size
+             | Search String
              | Quit
 
 parseCommand : String -> String -> Maybe Command
@@ -32,6 +33,7 @@ parseCommand "get" val = case all isDigit (unpack val) of
                               False => Nothing
                               True => Just (Get (cast val))
 parseCommand "size" "" = Just Size
+parseCommand "search" val = Just (Search val)
 parseCommand "quit" "" = Just Quit
 parseCommand _ _ = Nothing
 
@@ -46,12 +48,19 @@ getEntry pos store = let storeItems = items store in
                               Nothing => Just ("Out of range\n", store)
                               Just id => Just (index id storeItems ++ "\n", store)
 
+searchEntry : String -> Vect _ String -> Nat -> String
+searchEntry term [] k = ""
+searchEntry term (x :: xs) k = if Strings.isInfixOf term x
+                                  then (show k ++ ": " ++ show x ++ "\n") ++ searchEntry term xs (S k)
+                                  else searchEntry term xs (S k)
+
 processInput : DataStore -> String -> Maybe (String, DataStore)
 processInput store input = case parse input of
                                 Nothing => Just ("Invalid command\n", store)
                                 Just (Add item) => Just ("ID " ++ show (size store) ++ "\n", addToStore store item)
                                 Just (Get pos) => getEntry pos store
                                 Just Size => Just ("Size " ++ show (size store) ++ "\n", store)
+                                Just (Search str) => Just (searchEntry str (items store) 0, store)
                                 Just Quit => Nothing
 
 main : IO ()
