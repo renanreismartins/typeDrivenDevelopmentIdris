@@ -12,3 +12,11 @@ printLonger = do putStr "First string: "
                  putStr "Second string: "
                  second <- getLine
                  putStr (show (Main.max (length first) (length second)))
+
+
+printLongerUglier : IO ()
+printLongerUglier = putStr "First string: " >>=
+                \_ => getLine >>=
+                \first => putStr "Second string: " >>=
+                \_ => getLine >>=
+                \second => putStr (show (Main.max (length first) (length second)))
