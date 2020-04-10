@@ -35,3 +35,18 @@ readAndSave = do lines <- readToBlank
                  case result of
                    Left _ => putStrLn "Could not save the file"
                    Right _ => putStrLn "File saved"
+
+
+myReadFile : File -> IO (n ** Vect n String)
+myReadFile h = do Right line <- fGetLine h
+                  isEOF <- (fEOF h)
+                  if isEOF
+                    then do closeFile h
+                            pure (_ ** [])
+                    else do (_ ** xs) <- myReadFile h
+                            pure (_ ** line :: xs)
+
+
+readVectFile : (filename : String) -> IO (n ** Vect n String)
+readVectFile filename = do Right h <- openFile filename Read
+                           myReadFile h
