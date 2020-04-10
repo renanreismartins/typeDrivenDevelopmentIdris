@@ -16,3 +16,10 @@ zipInputs = do putStrLn "Enter first vector (blank line to end):"
                case exactLength len1 vect2 of
                     Nothing => putStrLn "Vectors are different lengths"
                     Just vect2' => putStrLn (show (zip vect1 vect2'))
+
+readToBlank : IO (List String)
+readToBlank = do line <- getLine
+                 if (line == "")
+                    then pure []
+                    else do lines <- readToBlank
+                            pure (line :: lines)
