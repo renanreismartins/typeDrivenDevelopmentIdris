@@ -48,4 +48,6 @@ myReadFile h = do Right line <- fGetLine h
 
 readVectFile : (filename : String) -> IO (n ** Vect n String)
 readVectFile filename = do Right h <- openFile filename Read | pure (_ ** [])
-                           myReadFile h
+                           result <- myReadFile h
+                           _ <- closeFile h
+                           pure result
