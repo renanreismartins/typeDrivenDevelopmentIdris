@@ -23,3 +23,15 @@ readToBlank = do line <- getLine
                     then pure []
                     else do lines <- readToBlank
                             pure (line :: lines)
+
+
+
+
+readAndSave : IO ()
+readAndSave = do lines <- readToBlank
+                 let content = unlines lines
+                 fileName <- getLine
+                 result <- (writeFile fileName content)
+                 case result of
+                   Left _ => putStrLn "Could not save the file"
+                   Right _ => putStrLn "File saved"
