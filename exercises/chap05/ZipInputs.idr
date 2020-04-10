@@ -41,12 +41,11 @@ myReadFile : File -> IO (n ** Vect n String)
 myReadFile h = do Right line <- fGetLine h
                   isEOF <- (fEOF h)
                   if isEOF
-                    then do closeFile h
-                            pure (_ ** [])
+                    then pure (_ ** [])
                     else do (_ ** xs) <- myReadFile h
                             pure (_ ** line :: xs)
 
 
 readVectFile : (filename : String) -> IO (n ** Vect n String)
-readVectFile filename = do Right h <- openFile filename Read
+readVectFile filename = do Right h <- openFile filename Read | pure (_ ** [])
                            myReadFile h
