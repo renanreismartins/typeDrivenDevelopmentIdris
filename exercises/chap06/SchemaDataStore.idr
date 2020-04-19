@@ -19,6 +19,13 @@ record DataStore where
        size : Nat
        items : Vect size (SchemaType schema)
 
+addToStore : (store : DataStore) -> SchemaType (schema store) -> DataStore
+addToStore (MkData schema size items) newItem = MkData schema _ (addToData items)
+ where
+   addToData : Vect old (SchemaType schema) -> Vect (S old) (SchemaType schema)
+   addToData [] = [newItem]
+   addToData (x :: xs) = x :: addToData xs
+
 {--
 size : DataStore -> Nat
 size (MkData size' items) = size'
@@ -26,12 +33,7 @@ size (MkData size' items) = size'
 items: (store : DataStore) -> Vect (size store) String
 items (MkData size' items') = items'
 
-addToStore : DataStore -> String -> DataStore
-addToStore (MkData size items) newItem = MkData _ (addToData items)
-  where
-    addToData : Vect old String -> Vect (S old) String
-    addToData [] = [newItem]
-    addToData (x :: xs) = x :: addToData xs
+
 
 
 data Command = Add String
