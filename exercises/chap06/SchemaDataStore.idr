@@ -7,11 +7,13 @@ infixr 5 .+.
 
 data Schema = SString
             | SInt
+            | SChar
             | (.+.) Schema Schema
 
 SchemaType : Schema -> Type
 SchemaType SString = String
 SchemaType SInt = Int
+SchemaType SChar = Char
 SchemaType (x .+. y) = (SchemaType x, SchemaType y)
 
 data Command : Schema -> Type where
@@ -36,6 +38,7 @@ addToStore (MkData schema size items) newItem = MkData schema _ (addToData items
 display : SchemaType schema -> String
 display {schema = SString} item = show item
 display {schema = SInt} item = show item
+display {schema = SChar} item = show item
 display {schema = (x .+. y)} (l, r) = display l ++ ", " ++ display r
 
 getEntry : (pos : Integer) -> (store : DataStore) -> Maybe (String, DataStore)
@@ -64,6 +67,12 @@ parseSchema ("Int" :: xs)
            _ => case parseSchema xs of
                      Nothing => Nothing
                      Just xs_sch => Just (SInt .+. xs_sch)
+parseSchema ("Char" :: xs)
+   = case xs of
+          [] => Just SChar
+          _ => case parseSchema xs of
+                    Nothing => Nothing
+                    Just xs_sch => Just (SChar .+. xs_sch)
 parseSchema _ = Nothing
 
 
@@ -78,6 +87,9 @@ parsePrefix SString item = getQuoted (unpack item)
 parsePrefix SInt item = case span isDigit item of
                              ("", rest) => Nothing
                              (num, rest) => Just (cast num, ltrim rest)
+parsePrefix SChar item = case unpack item of
+                              (x :: xs) => Just (x, ltrim (pack xs))
+                              [] => Nothing
 parsePrefix (schemal .+. schemar) item = case parsePrefix schemal item of
                                               Nothing => Nothing
                                               Just (lVal, item') =>
