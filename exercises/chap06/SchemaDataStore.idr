@@ -58,21 +58,18 @@ parseSchema : List String -> Maybe Schema
 parseSchema ("String" :: xs)
     = case xs of
            [] => Just SString
-           _ => case parseSchema xs of
-                     Nothing => Nothing
-                     Just xs_sch => Just (SString .+. xs_sch)
+           _ => do parsedSchema <- parseSchema xs
+                   Just (SString .+. parsedSchema)
 parseSchema ("Int" :: xs)
     = case xs of
            [] => Just SInt
-           _ => case parseSchema xs of
-                     Nothing => Nothing
-                     Just xs_sch => Just (SInt .+. xs_sch)
+           _ => do parsedSchema <- parseSchema xs
+                   Just (SInt .+. parsedSchema)
 parseSchema ("Char" :: xs)
    = case xs of
           [] => Just SChar
-          _ => case parseSchema xs of
-                    Nothing => Nothing
-                    Just xs_sch => Just (SChar .+. xs_sch)
+          _ => do parsedSchema <- parseSchema xs
+                  Just (SChar .+. parsedSchema)
 parseSchema _ = Nothing
 
 
@@ -90,12 +87,10 @@ parsePrefix SInt item = case span isDigit item of
 parsePrefix SChar item = case unpack item of
                               (x :: xs) => Just (x, ltrim (pack xs))
                               [] => Nothing
-parsePrefix (schemal .+. schemar) item = case parsePrefix schemal item of
-                                              Nothing => Nothing
-                                              Just (lVal, item') =>
-                                                   case parsePrefix schemar item' of
-                                                        Nothing => Nothing
-                                                        Just (rVal, item'') => Just ((lVal, rVal), item'')
+parsePrefix (schemal .+. schemar) item = do (lVal, item') <-parsePrefix schemal item
+                                            (rVal, item'') <- parsePrefix schemar item'
+                                            Just ((lVal, rVal), item'')
+
 
 parseBySchema : (schema : Schema) -> String -> Maybe (SchemaType schema)
 parseBySchema schema input = case parsePrefix schema input of
@@ -105,9 +100,8 @@ parseBySchema schema input = case parsePrefix schema input of
 
 
 parseCommand : (schema : Schema) -> String -> String -> Maybe (Command schema)
-parseCommand schema "add" str = case parseBySchema schema str of
-                                     Nothing => Nothing
-                                     Just strOk => Just (Add strOk)
+parseCommand schema "add" str = do parsedStr <- parseBySchema schema str
+                                   Just (Add parsedStr)
 parseCommand schema "get" "" = Just (Get Nothing)
 parseCommand schema "get" val = case all isDigit (unpack val) of
                                      False => Nothing
