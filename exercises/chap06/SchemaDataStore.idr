@@ -33,8 +33,6 @@ addToStore (MkData schema size items) newItem = MkData schema _ (addToData items
    addToData (x :: xs) = x :: addToData xs
 
 display : SchemaType schema -> String
--- SchemaType schema will evaluate for something like (Int, String),
--- so the definition will be (Int, String) -> String ?
 display {schema = SString} item = show item
 display {schema = SInt} item = show item
 display {schema = (x .+. y)} (l, r) = display l ++ ", " ++ display r
@@ -44,15 +42,40 @@ getEntry pos store = let storeItems = items store in
                         case integerToFin pos (size store) of
                              Nothing => Just ("Out of range\n", store)
                              Just id => Just(display (index id (items store)) ++ "\n", store)
-                             -- index id... returns (Int, String) for example,
-                             -- that is not a schema, so how come display accept those params?
+
+
+parsePrefix : (schema : Schema) -> String -> Maybe (SchemaType schema, String)
+parsePrefix SString item = getQuoted (unpack item)
+  where
+    getQuoted : List Char -> Maybe (String, String)
+    getQuoted ('"' :: xs) = case span (/= '"') xs of
+                                 (quoted, '"' :: rest) => Just (pack quoted, ltrim (pack rest))
+                                 _ => Nothing
+    getQuoted _ = Nothing
+parsePrefix SInt item = case span isDigit item of
+                             ("", rest) => Nothing
+                             (num, rest) => Just (cast num, ltrim rest)
+parsePrefix (schemal .+. schemar) item = case parsePrefix schemal item of
+                                              Nothing => Nothing
+                                              Just (lVal, item') =>
+                                                   case parsePrefix schemar item' of
+                                                        Nothing => Nothing
+                                                        Just (rVal, item'') => Just ((lVal, rVal), item'')
+
+parseBySchema : (schema : Schema) -> String -> Maybe (SchemaType schema)
+parseBySchema schema input = case parsePrefix schema input of
+                                  Just (res, "") => Just res
+                                  Just _ => Nothing
+                                  _ => Nothing
 
 
 parseCommand : (schema : Schema) -> String -> String -> Maybe (Command schema)
-parseCommand schema "add" str = Just (Add (?parseBySchema str))
+parseCommand schema "add" str = case parseBySchema schema str of
+                                     Nothing => Nothing
+                                     Just strOk => Just (Add strOk)
 parseCommand schema "get" val = case all isDigit (unpack val) of
-                            False => Nothing
-                            True => Just (Get (cast val))
+                                     False => Nothing
+                                     True => Just (Get (cast val))
 parseCommand schema "quit" "" = Just Quit
 parseCommand _ _ _ = Nothing
 
