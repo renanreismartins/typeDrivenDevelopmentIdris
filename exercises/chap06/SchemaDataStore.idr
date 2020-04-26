@@ -19,7 +19,7 @@ SchemaType (x .+. y) = (SchemaType x, SchemaType y)
 data Command : Schema -> Type where
      SetSchema : (newSchema : Schema) -> Command schema
      Add : SchemaType schema -> Command schema
-     Get : Integer -> Command schema
+     Get : Maybe Integer -> Command schema
      Quit : Command schema
 
 record DataStore where
@@ -108,9 +108,10 @@ parseCommand : (schema : Schema) -> String -> String -> Maybe (Command schema)
 parseCommand schema "add" str = case parseBySchema schema str of
                                      Nothing => Nothing
                                      Just strOk => Just (Add strOk)
+parseCommand schema "get" "" = Just (Get Nothing)
 parseCommand schema "get" val = case all isDigit (unpack val) of
                                      False => Nothing
-                                     True => Just (Get (cast val))
+                                     True => Just (Get (Just (cast val)))
 parseCommand schema "quit" "" = Just Quit
 parseCommand schema "schema" rest = do schemaOk <- parseSchema (words rest)
                                        Just (SetSchema schemaOk)
@@ -121,11 +122,17 @@ parse : (schema : Schema) -> (input : String) -> Maybe (Command schema)
 parse schema input = case span (/= ' ') input of
                  (cmd, args) => parseCommand schema cmd (ltrim args)
 
+
+displayAll : Nat -> Vect size (SchemaType schema) -> String
+displayAll k [] = ""
+displayAll k (x :: xs) = show k ++ ": " ++ display x ++ "\n" ++ displayAll (k + 1) xs
+
 processInput : DataStore -> String -> Maybe (String, DataStore)
 processInput store input = case parse (schema store) input of
                                 Nothing => Just ("Invalid command\n", store)
                                 Just (Add item) => Just ("ID " ++ show (size store) ++ "\n", addToStore store item)
-                                Just (Get pos) => getEntry pos store
+                                Just (Get (Just pos)) => getEntry pos store
+                                Just (Get Nothing) => Just (displayAll 0 (items store), store)
                                 Just Quit => Nothing
                                 Just (SetSchema schema') => case setSchema store schema' of
                                                                  Nothing => Just ("Can't update store schema\n", store)
