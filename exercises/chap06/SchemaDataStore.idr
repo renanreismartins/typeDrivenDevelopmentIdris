@@ -100,9 +100,8 @@ parseCommand schema "get" val = case all isDigit (unpack val) of
                                      False => Nothing
                                      True => Just (Get (cast val))
 parseCommand schema "quit" "" = Just Quit
-parseCommand schema "schema" rest = case parseSchema (words rest) of
-                                         Nothing => Nothing
-                                         Just schemaOk => Just (SetSchema schemaOk)
+parseCommand schema "schema" rest = do schemaOk <- parseSchema (words rest)
+                                       Just (SetSchema schemaOk)
 parseCommand _ _ _ = Nothing
 
 
