@@ -15,6 +15,7 @@ SchemaType SInt = Int
 SchemaType (x .+. y) = (SchemaType x, SchemaType y)
 
 data Command : Schema -> Type where
+     SetSchema : (newSchema : Schema) -> Command schema
      Add : SchemaType schema -> Command schema
      Get : Integer -> Command schema
      Quit : Command schema
@@ -42,6 +43,28 @@ getEntry pos store = let storeItems = items store in
                         case integerToFin pos (size store) of
                              Nothing => Just ("Out of range\n", store)
                              Just id => Just(display (index id (items store)) ++ "\n", store)
+
+
+setSchema : (store : DataStore) -> Schema -> Maybe DataStore
+setSchema store schema = case size store of
+                              Z => Just (MkData schema _ [])
+                              S k => Nothing
+
+
+parseSchema : List String -> Maybe Schema
+parseSchema ("String" :: xs)
+    = case xs of
+           [] => Just SString
+           _ => case parseSchema xs of
+                     Nothing => Nothing
+                     Just xs_sch => Just (SString .+. xs_sch)
+parseSchema ("Int" :: xs)
+    = case xs of
+           [] => Just SInt
+           _ => case parseSchema xs of
+                     Nothing => Nothing
+                     Just xs_sch => Just (SInt .+. xs_sch)
+parseSchema _ = Nothing
 
 
 parsePrefix : (schema : Schema) -> String -> Maybe (SchemaType schema, String)
@@ -77,6 +100,9 @@ parseCommand schema "get" val = case all isDigit (unpack val) of
                                      False => Nothing
                                      True => Just (Get (cast val))
 parseCommand schema "quit" "" = Just Quit
+parseCommand schema "schema" rest = case parseSchema (words rest) of
+                                         Nothing => Nothing
+                                         Just schemaOk => Just (SetSchema schemaOk)
 parseCommand _ _ _ = Nothing
 
 
@@ -90,6 +116,9 @@ processInput store input = case parse (schema store) input of
                                 Just (Add item) => Just ("ID " ++ show (size store) ++ "\n", addToStore store item)
                                 Just (Get pos) => getEntry pos store
                                 Just Quit => Nothing
+                                Just (SetSchema schema') => case setSchema store schema' of
+                                                                 Nothing => Just ("Can't update store schema\n", store)
+                                                                 Just store' => Just ("Ok\n", store')
 
 
 main : IO ()
