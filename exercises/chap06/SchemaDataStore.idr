@@ -125,7 +125,8 @@ parse schema input = case span (/= ' ') input of
 
 displayAll : Nat -> Vect size (SchemaType schema) -> String
 displayAll k [] = ""
-displayAll k (x :: xs) = show k ++ ": " ++ display x ++ "\n" ++ displayAll (k + 1) xs
+displayAll k (x :: xs) = let rest = displayAll (S k) xs in
+                             show k ++ ": " ++ display x ++ "\n" ++ rest
 
 processInput : DataStore -> String -> Maybe (String, DataStore)
 processInput store input = case parse (schema store) input of
