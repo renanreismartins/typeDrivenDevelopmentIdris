@@ -20,3 +20,9 @@ describeListEnd input with (listLast input)
 --
 -- describeListEnd : List Int -> String
 -- describeListEnd xs = describeHelper xs (listLast xs)
+
+
+myReverse : List a -> List a
+myReverse input with (listLast input)
+  myReverse [] | Empty = []
+  myReverse (xs ++ [x]) | (NonEmpty xs x) = x :: myReverse xs
